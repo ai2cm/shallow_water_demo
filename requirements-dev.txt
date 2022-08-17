@@ -1,0 +1,7 @@
+rope
+isort
+black
+pre-commit
+pytest
+pytest-coverage
+tox

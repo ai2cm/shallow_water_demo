@@ -1,0 +1,41 @@
+name: Python package
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+  - cron: '0 2 * * *'   # run at 2 AM UTC
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9"]
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    - uses: pre-commit/action@v3.0.0
+    - name: Load from cache if no dependencies have changed
+      uses: actions/cache@v3
+      with:
+        path: ${{ env.pythonLocation }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('setup.cfg') }}-${{ hashFiles('requirements-dev.txt') }}
+    - name: Install dependencies
+      run: |
+        sudo apt install openmpi-bin libopenmpi-dev
+        python -m pip install --upgrade pip wheel setuptools
+        pip install git+https://github.com/GridTools/gt4py.git@e5436a4978477bf533800d1681489f8a9459781b#egg=gt4py
+        pip install -r requirements-dev.txt
+    - name: Install Python package
+      run: |
+        pip install -e ./
+    - name: Test with pytest
+      run: |
+        pytest --cov=shallow_water tests/

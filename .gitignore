@@ -1,0 +1,7 @@
+.mypy_cache
+*.egg-info*
+__pycache__/
+cov_html/
+.coverage
+.gt_cache
+.dace*
