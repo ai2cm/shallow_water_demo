@@ -22,7 +22,7 @@ $ gh repo clone ai2cm/shallow_water_demo && cd shallow_water_demp
 $ pip install -e ./
 ```
 
-## ✍️ Development
+## 💻 Development
 
 There are several useful development dependencies specified in [`requirements-dev.txt`](https://github.com/ai2cm/shallow_water_demo/blob/main/requirements-dev.txt).
 
