@@ -8,12 +8,10 @@ import sys
 import yaml
 from mpi4py import MPI
 
-import shallow_water
-from shallow_water import ShallowWaterModel
-
 from .communicator import Comm
 from .config import Config
 from .grid import Grid
+from .model import ShallowWaterModel
 
 
 def integrate(
@@ -74,7 +72,7 @@ def run(
     """
     with open(sys.argv[1], mode="r") as f:
         data = yaml.safe_load(f.read())
-        config = shallow_water.Config.from_dict(**data)
+        config = Config.from_dict(**data)
 
     if output_frequency >= 0 and os.path.exists(output_directory):
         raise RuntimeError(
