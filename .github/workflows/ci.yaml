@@ -31,7 +31,7 @@ jobs:
       run: |
         sudo apt install openmpi-bin libopenmpi-dev
         python -m pip install --upgrade pip wheel setuptools
-        pip install git+https://github.com/GridTools/gt4py.git@e5436a4978477bf533800d1681489f8a9459781b#egg=gt4py
+        pip install git+https://github.com/GridTools/gt4py.git@c08f9f60e26a4734cac26479af4593e86c91cd06#egg=gt4py
         pip install -r requirements-dev.txt
     - name: Install Python package
       run: |
