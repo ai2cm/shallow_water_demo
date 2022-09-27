@@ -99,6 +99,9 @@ class Grid:
             dict of the serializable attributes
 
         """
+        # A previous version of this used dataclasses.asdict, but that did not work
+        # because the copy.deepcopy call happens before the dict_factory method is applied,
+        # so it was not possible to filter out the comm before then.
         return {
             field.name: getattr(self, field.name)
             for field in dataclasses.fields(self)
