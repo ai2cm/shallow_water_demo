@@ -1,7 +1,6 @@
 """Shallow water model."""
 
 import dataclasses
-import functools
 import json
 from typing import Any, List, Optional, Tuple
 
@@ -100,9 +99,11 @@ class Grid:
             dict of the serializable attributes
 
         """
-        return dataclasses.asdict(
-            self, dict_factory=lambda x: {k: v for k, v in x if k != "comm"}
-        )
+        return {
+            field.name: getattr(self, field.name)
+            for field in dataclasses.fields(self)
+            if field.name != "comm"
+        }
 
     def to_json(self) -> str:
         """Return a yaml representation of the Grid.
@@ -157,7 +158,7 @@ class Grid:
 
         return True
 
-    @functools.cached_property
+    @property
     def dx(self) -> float:
         """Compute the x grid spacing.
 
@@ -167,7 +168,7 @@ class Grid:
         """
         return (self.xlimit[1] - self.xlimit[0]) / (self.ni - 1)
 
-    @functools.cached_property
+    @property
     def dy(self) -> float:
         """Compute the y grid spacing.
 
