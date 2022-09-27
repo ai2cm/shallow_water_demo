@@ -313,7 +313,7 @@ class State:
             prefix: Path and file prefix
 
         """
-        for k, v in self.__dict__.items():
+        for k, v in {"h": self.h, "u": self.u, "v": self.v}.items():
             np.save(f"{prefix}_{k}_{self.grid.comm.Get_rank()}.npy", v)
         with open(f"{prefix}_grid_{self.grid.comm.Get_rank()}.json", mode="w") as f:
             f.write(self.grid.to_json())
