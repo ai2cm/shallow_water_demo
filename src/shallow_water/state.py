@@ -201,22 +201,22 @@ class _StateHaloExchanger:
         recv_requests: List[MPI.Request] = []
         if grid.procs[0][0] is not None:
             recv_requests.append(
-                grid.comm.Irecv(self.left_recv, dest=grid.procs[0][0], tag=0)
+                grid.comm.Irecv(self.left_recv, source=grid.procs[0][0], tag=0)
             )
 
         if grid.procs[0][1] is not None:
             recv_requests.append(
-                grid.comm.Irecv(self.right_recv, dest=grid.procs[0][1], tag=1)
+                grid.comm.Irecv(self.right_recv, source=grid.procs[0][1], tag=1)
             )
 
         if grid.procs[1][0] is not None:
             recv_requests.append(
-                grid.comm.Irecv(self.down_recv, dest=grid.procs[1][0], tag=10)
+                grid.comm.Irecv(self.down_recv, source=grid.procs[1][0], tag=10)
             )
 
         if grid.procs[1][1] is not None:
             recv_requests.append(
-                grid.comm.Irecv(self.up_recv, dest=grid.procs[1][1], tag=11)
+                grid.comm.Irecv(self.up_recv, source=grid.procs[1][1], tag=11)
             )
 
         self._pack(state)

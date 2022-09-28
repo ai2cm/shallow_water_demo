@@ -1,10 +1,7 @@
 """Test the shallow water model."""
 
 import json
-from gettext import npgettext
-from tempfile import TemporaryDirectory
 
-import numpy as np
 import pytest
 
 import shallow_water
@@ -21,13 +18,13 @@ from shallow_water.communicator import NullComm
 )
 def test_proc_layout(proc_layout, my_rank, procs):
     config_grid = shallow_water.config.Grid(ni=12, nj=16, nk=2, proc_layout=proc_layout)
-    grid = shallow_water.Grid.from_config(config_grid, NullComm(my_rank))
+    grid = shallow_water.Grid.from_config(config_grid, NullComm(my_rank, 1))
     assert grid.procs == procs
 
 
 def test_serialize():
     config_grid = shallow_water.config.Grid(ni=12, nj=16, nk=2, proc_layout=(2, 2))
-    comm = NullComm(0)
+    comm = NullComm(0, 1)
 
     grid = shallow_water.Grid.from_config(config_grid, comm=comm)
     data = json.loads(grid.to_json())

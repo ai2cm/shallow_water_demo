@@ -32,8 +32,8 @@ def _set_ic_quiescent(state: State, **kwargs: Any) -> None:
 
     """
     state.h[:] = state.dtype(kwargs.get("h", 1.0))
-    state.u[:] = state.dtype(kwargs.get("u", 1.0))
-    state.v[:] = state.dtype(kwargs.get("v", 1.0))
+    state.u[:] = state.dtype(kwargs.get("u", 0.0))
+    state.v[:] = state.dtype(kwargs.get("v", 0.0))
 
 
 def _set_ic_tidalwave(state: State, **kwargs: Any) -> None:

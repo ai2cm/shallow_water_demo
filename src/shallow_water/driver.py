@@ -1,9 +1,7 @@
 """Main driver for the shallow water model."""
 
-import argparse
 import logging
 import os
-import sys
 
 import yaml
 from mpi4py import MPI
@@ -70,7 +68,7 @@ def run(
         ShallowWaterModel: the model at the final time
 
     """
-    with open(sys.argv[1], mode="r") as f:
+    with open(config_file, mode="r") as f:
         data = yaml.safe_load(f.read())
         config = Config.from_dict(**data)
 
@@ -87,31 +85,3 @@ def run(
         output_directory=output_directory,
         output_frequency=output_frequency,
     )
-
-
-def main() -> None:
-    """Driver for the shallow water model that parses command line arguments."""
-    parser = argparse.ArgumentParser(description="Run the shallow water model.")
-    parser.add_argument("config_file", type=str, help="yaml configuration")
-    parser.add_argument(
-        "-d",
-        "--directory",
-        type=str,
-        default="output",
-        help="Directory to save output",
-    )
-    parser.add_argument(
-        "-f",
-        "--output-frequency",
-        type=int,
-        default=-1,
-        help="frequency with which to save the state: "
-        "f<0: never, f=0: final state only, f>0: every f steps and last",
-    )
-    args = parser.parse_args(sys.argv)
-
-    run(args.config_file, args.directory, args.output_frequency)
-
-
-if __name__ == "__main__":
-    main()

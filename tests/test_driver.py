@@ -6,7 +6,7 @@ import pytest
 import yaml
 from mpi4py import MPI
 
-import shallow_water
+import shallow_water.driver
 
 
 @pytest.fixture
