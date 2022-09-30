@@ -36,17 +36,18 @@ def integrate(
     model = ShallowWaterModel(grid, config.model)
 
     if output_frequency > 0:
-        model.state.to_disk(os.path.join(output_directory, "state_initial"))
+        model.state.to_disk(os.path.join(output_directory, "initial"))
 
     for step in range(config.model.num_steps):
         model.take_step()
         logging.info(f"step {step}: time={step * config.model.timestep}")
 
         if output_frequency > 0 and step % output_frequency:
-            model.state.to_disk(os.path.join(output_directory, f"state_step_{step}"))
+            # Uses `step + 1` because the output is after the model takes `step`
+            model.state.to_disk(os.path.join(output_directory, f"step_{step + 1}"))
 
     if output_frequency > 0:
-        model.state.to_disk(os.path.join(output_directory, "state_final"))
+        model.state.to_disk(os.path.join(output_directory, "final"))
 
     return model
 
@@ -72,7 +73,7 @@ def run(
         data = yaml.safe_load(f.read())
         config = Config.from_dict(**data)
 
-    if output_frequency >= 0 and os.path.exists(output_directory):
+    if output_frequency >= 0 and os.path.isfile(output_directory):
         raise RuntimeError(
             f"{output_directory} conflicts with data that model will write"
         )

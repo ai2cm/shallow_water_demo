@@ -201,22 +201,22 @@ class _StateHaloExchanger:
         recv_requests: List[MPI.Request] = []
         if grid.procs[0][0] is not None:
             recv_requests.append(
-                grid.comm.Irecv(self.left_recv, source=grid.procs[0][0], tag=0)
+                grid.comm.Irecv(self.left_recv, source=grid.procs[0][0], tag=1)
             )
 
         if grid.procs[0][1] is not None:
             recv_requests.append(
-                grid.comm.Irecv(self.right_recv, source=grid.procs[0][1], tag=1)
+                grid.comm.Irecv(self.right_recv, source=grid.procs[0][1], tag=0)
             )
 
         if grid.procs[1][0] is not None:
             recv_requests.append(
-                grid.comm.Irecv(self.down_recv, source=grid.procs[1][0], tag=10)
+                grid.comm.Irecv(self.down_recv, source=grid.procs[1][0], tag=11)
             )
 
         if grid.procs[1][1] is not None:
             recv_requests.append(
-                grid.comm.Irecv(self.up_recv, source=grid.procs[1][1], tag=11)
+                grid.comm.Irecv(self.up_recv, source=grid.procs[1][1], tag=10)
             )
 
         self._pack(state)
@@ -314,7 +314,7 @@ class State:
 
         """
         for k, v in {"h": self.h, "u": self.u, "v": self.v}.items():
-            np.save(f"{prefix}_{k}_{self.grid.comm.Get_rank()}.npy", v)
+            np.save(f"{prefix}_state_{k}_{self.grid.comm.Get_rank()}.npy", v)
         with open(f"{prefix}_grid_{self.grid.comm.Get_rank()}.json", mode="w") as f:
             f.write(self.grid.to_json())
         with open(f"{prefix}_state_{self.grid.comm.Get_rank()}.json", mode="w") as f:
@@ -341,7 +341,9 @@ class State:
 
         """
         myrank = comm.Get_rank()
-        storages = {k: np.load(f"{prefix}_{k}_{myrank}.npy") for k in ("h", "u", "v")}
+        storages = {
+            k: np.load(f"{prefix}_state_{k}_{myrank}.npy") for k in ("h", "u", "v")
+        }
         with open(f"{prefix}_state_{myrank}.json", mode="r") as f:
             state_data = json.loads(f.read())
 

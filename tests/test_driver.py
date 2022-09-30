@@ -33,10 +33,10 @@ def test_driver_output(config_yaml):
             config, MPI.COMM_WORLD, output_directory=tempdir, output_frequency=2
         )
 
-        assert glob.glob(os.path.join(tempdir, "state_initial*"))
-        assert glob.glob(os.path.join(tempdir, "state_step_1*"))
-        assert glob.glob(os.path.join(tempdir, "state_step_3*"))
-        assert glob.glob(os.path.join(tempdir, "state_final*"))
+        assert glob.glob(os.path.join(tempdir, "initial*"))
+        assert glob.glob(os.path.join(tempdir, "step_2*"))
+        assert glob.glob(os.path.join(tempdir, "step_4*"))
+        assert glob.glob(os.path.join(tempdir, "final*"))
 
 
 def test_driver_no_output(config_yaml):
