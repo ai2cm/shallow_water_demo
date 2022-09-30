@@ -24,9 +24,20 @@ def main() -> None:
         help="frequency with which to save the state: "
         "f<0: never, f=0: final state only, f>0: every f steps and last",
     )
+    parser.add_argument(
+        "-g",
+        "--globalize",
+        action="store_true",
+        help="gather state after integrating and serialize to disk",
+    )
     args = parser.parse_args()
 
-    shallow_water.driver.run(args.config_file, args.directory, args.output_frequency)
+    shallow_water.driver.run(
+        args.config_file,
+        args.directory,
+        args.output_frequency,
+        globalize=args.globalize,
+    )
 
 
 if __name__ == "__main__":

@@ -19,3 +19,4 @@ RUN pip install /usr/local/src/shallow_water
 env OMPI_ALLOW_RUN_AS_ROOT=1
 env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
 WORKDIR /usr/local/src/shallow_water
+ENTRYPOINT ["scripts/run_shallow_water.sh"]

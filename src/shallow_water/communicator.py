@@ -78,7 +78,7 @@ class NullComm(Comm):
             data if _rank == root else None
 
         """
-        return data if self.Get_rank() == root else None
+        return [data] if self.Get_rank() == root else None
 
     def Get_rank(self) -> int:
         """Get the rank specified.
