@@ -222,7 +222,7 @@ class Grid:
             procs=((None, None), (None, None)),
             position=(0, 0),
             proc_layout=(1, 1),
-            comm=NullComm(0, 1),
+            comm=NullComm(0, num_ranks=1),
         )
 
 

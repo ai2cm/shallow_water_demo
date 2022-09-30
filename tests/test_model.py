@@ -13,7 +13,9 @@ def grid() -> shallow_water.Grid:
     proc_layout = (2, 2)
     my_rank = 0
     config_grid = shallow_water.config.Grid(ni=8, nj=8, nk=2, proc_layout=proc_layout)
-    return shallow_water.grid.Grid.from_config(config_grid, NullComm(my_rank, 4))
+    return shallow_water.grid.Grid.from_config(
+        config_grid, NullComm(my_rank, num_ranks=4)
+    )
 
 
 @pytest.mark.parametrize("ic_type", ("tidal_wave", "quiescent"))

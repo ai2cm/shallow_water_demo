@@ -50,7 +50,7 @@ class NullRequest(MPI.Request):
 class NullComm(Comm):
     """Dummy implementation of Comm, used for serial tests."""
 
-    def __init__(self, rank: int, num_ranks: int):
+    def __init__(self, rank: int, *, num_ranks: int):
         """Initialize Comm pretending to be a particular rank.
 
         Parameters:
