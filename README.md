@@ -8,7 +8,7 @@
 
 This demonstrates simple scaffolding and the core components to run a gt4py model.
 
-## 🐝 Getting started
+## 🐝 Local installation
 
 The demo requires Python 3.8 or 3.9, and `setuptools`. The other dependencies are
 specified in [`setup.cfg`](https://github.com/ai2cm/shallow_water_demo/blob/main/setup.cfg).
@@ -18,9 +18,46 @@ To get going...
 ```shell
 $ python3.8 -m venv venv
 $ source venv/bin/activate
-$ gh repo clone ai2cm/shallow_water_demo && cd shallow_water_demp
-$ pip install -e ./
+$ gh repo clone ai2cm/shallow_water_demo && cd shallow_water_demo
+$ pip install -e "./[all]"
 ```
+
+Along with the `shallow_water` package, this also installs two executables, `shallow_water_demo` and `plot_shallow_water_state`, which can be used to run and plot the model.
+
+As a quick example, you could run
+
+```
+$ scripts/run_shallow_water.sh examples/tidal_wave.yaml -d output -f 0 -g
+$ plot_shallow_water_state output/final_global
+```
+
+[`scripts/run_shallow_water.sh`](https://github.com/ai2cm/shallow_water_demo/blob/main/scripts/run_shallow_water.sh) and is a wrapper around the `shallow_water_demo` executable that parses the config file and calls mpirun with the proper number of processes.
+
+## 🍱 Example in a box
+
+There is a Docker image that can be used to test and run examples.
+This is pushed to the GitHub container registry at `ghcr.io/ai2cm/shallow_water_demo:main`.
+
+In order to pull that image, you will have to authenticate docker with github, by first
+creating a personal access token at https://github.com/settings/tokens/new then copying
+that id and executing
+
+```shell
+$ export CR_PAT=YOUR_TOKEN
+$ echo $CR_PAT | docker login ghcr.io -u USERNAME --password-stdin
+```
+
+More info about this in the [GitHub Docs](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry).
+
+Once this is in place you can run an example with
+
+```shell
+$ docker run ghcr.io/ai2cm/shallow_water_demo:main examples/tidal_wave.yaml
+```
+
+The entrypoint of this docker container is `scripts/run_shallow_water.sh` and the default directory is the top-level `shallo_water_model` source.
+
+A volume mount is of course required to actually save data back to the local disk.
 
 ## 💻 Development
 

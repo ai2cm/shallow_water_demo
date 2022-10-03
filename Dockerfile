@@ -8,7 +8,7 @@ RUN wget https://github.com/mikefarah/yq/releases/download/v4.27.5/yq_linux_amd6
 RUN git -C /opt/pyenv pull
 RUN pyenv install ${PYTHON_VERSION}
 RUN pyenv global ${PYTHON_VERSION}
-RUN pip install mpi4py
+RUN pip install mpi4py==3.1.3
 RUN pip install git+https://github.com/gridtools/gt4py@c08f9f60e26a4734cac26479af4593e86c91cd06#egg=gt4py
 
 
