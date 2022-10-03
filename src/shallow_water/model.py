@@ -60,6 +60,8 @@ def _set_ic_tidalwave(state: State, **kwargs: Any) -> None:
         xlimit=grid.xlimit,
         ylimit=grid.ylimit,
     )
+    print(x.shape, y.shape)
+    print(state.h.shape)
 
     xm = grid.xlimit[0] + (grid.xlimit[1] - grid.xlimit[0]) / 2
     ym = grid.ylimit[0] + (grid.ylimit[1] - grid.ylimit[0]) / 2

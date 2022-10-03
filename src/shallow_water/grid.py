@@ -259,4 +259,4 @@ def get_position_arrays(
     X += 0.5 * dx
     Y += 0.5 * dy
 
-    return X, Y
+    return X.T, Y.T
