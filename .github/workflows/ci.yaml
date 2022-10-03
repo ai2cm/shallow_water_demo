@@ -23,11 +23,13 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - uses: pre-commit/action@v3.0.0
     - name: Load from cache if no dependencies have changed
+      id: pip-cache
       uses: actions/cache@v3
       with:
         path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('setup.cfg') }}-${{ hashFiles('requirements-dev.txt') }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('setup.cfg') }}-${{ hashFiles('requirements-dev.txt') }}-gt4py-c08f9f60e26a4734cac26479af4593e86c91cd06
     - name: Install dependencies
+      if: steps.pip-cache.outputs.cache-hit != 'true'
       run: |
         sudo apt install openmpi-bin libopenmpi-dev
         python -m pip install --upgrade pip wheel setuptools
