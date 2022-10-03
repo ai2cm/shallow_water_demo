@@ -27,13 +27,13 @@ jobs:
       uses: actions/cache@v3
       with:
         path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('setup.cfg') }}-${{ hashFiles('requirements-dev.txt') }}-gt4py-c08f9f60e26a4734cac26479af4593e86c91cd06
+        key: ${{ env.pythonLocation }}-${{ hashFiles('setup.cfg') }}-${{ hashFiles('requirements-dev.txt') }}-gt4py-b39a0f0b85038592e3fccabde56137bb9c60e231
     - name: Install dependencies
       if: steps.pip-cache.outputs.cache-hit != 'true'
       run: |
         sudo apt install openmpi-bin libopenmpi-dev
         python -m pip install --upgrade pip wheel setuptools
-        pip install git+https://github.com/GridTools/gt4py.git@c08f9f60e26a4734cac26479af4593e86c91cd06#egg=gt4py
+        pip install git+https://github.com/GridTools/gt4py.git@b39a0f0b85038592e3fccabde56137bb9c60e231#egg=gt4py
         pip install -r requirements-dev.txt
     - name: Install Python package
       run: |

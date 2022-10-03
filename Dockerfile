@@ -5,7 +5,7 @@ RUN set -eux; \
 	rm -rf /var/lib/apt/lists/*
 RUN wget https://github.com/mikefarah/yq/releases/download/v4.27.5/yq_linux_amd64 -O /usr/local/bin/yq && chmod +x /usr/local/bin/yq
 RUN pip install mpi4py==3.1.3
-RUN pip install git+https://github.com/gridtools/gt4py@c08f9f60e26a4734cac26479af4593e86c91cd06#egg=gt4py
+RUN pip install git+https://github.com/gridtools/gt4py@b39a0f0b85038592e3fccabde56137bb9c60e231#egg=gt4py
 
 
 FROM base as target

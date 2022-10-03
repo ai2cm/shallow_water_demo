@@ -115,7 +115,7 @@ class ShallowWaterModel:
 
     timestep: np.float64
 
-    b: gt4py.storage.Storage
+    b: np.ndarray
     state: State
     _new_state: State
 
@@ -133,10 +133,10 @@ class ShallowWaterModel:
         """
         self.b = gt4py.storage.zeros(
             backend=model_config.gt4py_backend,
-            default_origin=(1, 1),
-            shape=(grid.ni + 2, grid.nj + 2),
+            aligned_index=(self.nhalo, self.nhalo),
+            shape=(grid.ni + 2 * self.nhalo, grid.nj + 2 * self.nhalo),
             dtype=self.dtype,
-            mask=gt4py.gtscript.mask_from_axes(IJ),
+            dimensions=IJ,
         )
 
         self.state = State.new(
@@ -157,6 +157,10 @@ class ShallowWaterModel:
 
         self.timestep = model_config.timestep
         self.grid = grid
+
+        # This is used later in the take_step method
+        origin = (self.nhalo, self.nhalo, 0)
+        self.origins = {"h": origin, "u": origin, "v": origin, "b": origin[:-1]}
 
         set_initial_condition(
             self.state, model_config.initial_condition, **model_config.ic_data
@@ -283,6 +287,7 @@ class ShallowWaterModel:
             dt=self.timestep,
             dx=self.grid.dx,
             dy=self.grid.dy,
+            origin=self.origins,
         )
 
         nh = self.nhalo
