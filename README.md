@@ -19,7 +19,7 @@ To get going...
 $ python3.8 -m venv venv
 $ source venv/bin/activate
 $ gh repo clone ai2cm/shallow_water_demo && cd shallow_water_demo
-$ pip install -e "./[all]"
+$ pip install -e "./[plot]"
 ```
 
 Along with the `shallow_water` package, this also installs two executables, `shallow_water_demo` and `plot_shallow_water_state`, which can be used to run and plot the model.

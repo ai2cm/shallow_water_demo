@@ -37,7 +37,7 @@ jobs:
         pip install -r requirements-dev.txt
     - name: Install Python package
       run: |
-        pip install -e "./[all]"
+        pip install -e "./[plot]"
     - name: Test with pytest
       run: |
         pytest --cov=shallow_water tests/
