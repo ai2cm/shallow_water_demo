@@ -45,17 +45,22 @@ def plot_state(
     return fig
 
 
-def run(prefix: str, component: Optional[str]):
+def run(prefix: str, component: Optional[str], output: Optional[str]):
     """Deserialize state at 'prefix' and plot component.
 
     Parameters:
         prefix: State prefix
         component: variable in the state to plot {h, u, v} (optional)
+        output: filename to save plot
 
     """
     state = State.from_disk(prefix, comm=None)
-    plot_state(state, component)
-    plt.show()
+    fig = plot_state(state, component)
+
+    if output:
+        fig.savefig(output)
+    else:
+        plt.show()
 
 
 def main():
@@ -63,10 +68,11 @@ def main():
     parser = argparse.ArgumentParser(description="Plot the shallow_water state")
     parser.add_argument("prefix", type=str, help="state prefix")
     parser.add_argument("--component", "-c", type=str, help="State component to plot")
+    parser.add_argument("--output", "-o", type=str, help="output filename")
 
     args = parser.parse_args()
 
-    run(args.prefix, args.component)
+    run(args.prefix, args.component, args.output)
 
 
 if __name__ == "__main__":
