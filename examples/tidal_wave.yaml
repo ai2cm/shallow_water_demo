@@ -1,0 +1,12 @@
+model:
+  num_steps: 10
+  timestep: 0.001
+  initial_condition: "tidal_wave"
+grid:
+  ni: 20
+  nj: 20
+  nk: 2
+  proc_layout:
+  - 2
+  - 1
+

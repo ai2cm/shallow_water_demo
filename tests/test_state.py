@@ -12,7 +12,9 @@ def grid():
     proc_layout = (2, 2)
     my_rank = 0
     config_grid = shallow_water.config.Grid(ni=8, nj=8, nk=2, proc_layout=proc_layout)
-    return shallow_water.grid.Grid.from_config(config_grid, NullComm(my_rank))
+    return shallow_water.grid.Grid.from_config(
+        config_grid, NullComm(my_rank, num_ranks=1)
+    )
 
 
 @pytest.mark.parametrize("value", (None, 0, 1, 7))
@@ -29,10 +31,12 @@ def test_new_state(grid, value):
     (
         0,
         shallow_water.grid.Grid.from_config(
-            shallow_water.config.Grid(ni=8, nj=8, nk=2, proc_layout=(2, 3)), NullComm(0)
+            shallow_water.config.Grid(ni=8, nj=8, nk=2, proc_layout=(2, 3)),
+            NullComm(0, num_ranks=1),
         ),
         shallow_water.grid.Grid.from_config(
-            shallow_water.config.Grid(ni=6, nj=8, nk=2, proc_layout=(2, 2)), NullComm(0)
+            shallow_water.config.Grid(ni=6, nj=8, nk=2, proc_layout=(2, 2)),
+            NullComm(0, num_ranks=1),
         ),
     ),
 )

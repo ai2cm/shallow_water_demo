@@ -1,0 +1,6 @@
+.direnv
+.*_cache*
+__pycache__
+.tox
+.dockerignore
+Dockerfile

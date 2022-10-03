@@ -32,8 +32,8 @@ def _set_ic_quiescent(state: State, **kwargs: Any) -> None:
 
     """
     state.h[:] = state.dtype(kwargs.get("h", 1.0))
-    state.u[:] = state.dtype(kwargs.get("u", 1.0))
-    state.v[:] = state.dtype(kwargs.get("v", 1.0))
+    state.u[:] = state.dtype(kwargs.get("u", 0.0))
+    state.v[:] = state.dtype(kwargs.get("v", 0.0))
 
 
 def _set_ic_tidalwave(state: State, **kwargs: Any) -> None:
@@ -60,6 +60,8 @@ def _set_ic_tidalwave(state: State, **kwargs: Any) -> None:
         xlimit=grid.xlimit,
         ylimit=grid.ylimit,
     )
+    print(x.shape, y.shape)
+    print(state.h.shape)
 
     xm = grid.xlimit[0] + (grid.xlimit[1] - grid.xlimit[0]) / 2
     ym = grid.ylimit[0] + (grid.ylimit[1] - grid.ylimit[0]) / 2

@@ -8,7 +8,7 @@ import gt4py
 import numpy as np
 from mpi4py import MPI
 
-from .communicator import Comm
+from .communicator import Comm, NullComm
 from .grid import Grid
 
 
@@ -201,22 +201,22 @@ class _StateHaloExchanger:
         recv_requests: List[MPI.Request] = []
         if grid.procs[0][0] is not None:
             recv_requests.append(
-                grid.comm.Irecv(self.left_recv, dest=grid.procs[0][0], tag=0)
+                grid.comm.Irecv(self.left_recv, source=grid.procs[0][0], tag=1)
             )
 
         if grid.procs[0][1] is not None:
             recv_requests.append(
-                grid.comm.Irecv(self.right_recv, dest=grid.procs[0][1], tag=1)
+                grid.comm.Irecv(self.right_recv, source=grid.procs[0][1], tag=0)
             )
 
         if grid.procs[1][0] is not None:
             recv_requests.append(
-                grid.comm.Irecv(self.down_recv, dest=grid.procs[1][0], tag=10)
+                grid.comm.Irecv(self.down_recv, source=grid.procs[1][0], tag=11)
             )
 
         if grid.procs[1][1] is not None:
             recv_requests.append(
-                grid.comm.Irecv(self.up_recv, dest=grid.procs[1][1], tag=11)
+                grid.comm.Irecv(self.up_recv, source=grid.procs[1][1], tag=10)
             )
 
         self._pack(state)
@@ -264,6 +264,8 @@ class State:
 
     halo_exchanger = _StateHaloExchanger()
 
+    _is_global: bool = False
+
     @classmethod
     def new(
         cls,
@@ -273,6 +275,7 @@ class State:
         nhalo: int = 2,
         gt4py_backend: str = "numpy",
         value: Optional[int] = 0,
+        _is_global: bool = False,
     ) -> "State":
         """Create new shallow water state storages.
 
@@ -282,6 +285,7 @@ class State:
             nhalo: Number of halo points in each horizontal direction on each storage
             gt4py_backend: String that determines the compiler backend
             value: Initial value for the state data arrays
+            _is_global: Set to True if this is a global gathered state
 
         Returns:
             Class instance
@@ -301,6 +305,7 @@ class State:
             gt4py_backend=gt4py_backend,
             dtype=dtype,
             grid=grid,
+            _is_global=_is_global,
         )
 
     def to_disk(self, prefix: str) -> None:
@@ -313,11 +318,17 @@ class State:
             prefix: Path and file prefix
 
         """
-        for k, v in {"h": self.h, "u": self.u, "v": self.v}.items():
-            np.save(f"{prefix}_{k}_{self.grid.comm.Get_rank()}.npy", v)
-        with open(f"{prefix}_grid_{self.grid.comm.Get_rank()}.json", mode="w") as f:
+        tag: str
+        if self._is_global:
+            tag = "global"
+        else:
+            tag = str(self.grid.comm.Get_rank())
+
+        with open(f"{prefix}_{tag}_grid.json", mode="w") as f:
             f.write(self.grid.to_json())
-        with open(f"{prefix}_state_{self.grid.comm.Get_rank()}.json", mode="w") as f:
+        for k, v in {"h": self.h, "u": self.u, "v": self.v}.items():
+            np.save(f"{prefix}_{tag}_state_{k}.npy", v)
+        with open(f"{prefix}_{tag}_state_metadata.json", mode="w") as f:
             f.write(
                 json.dumps(
                     {
@@ -329,29 +340,37 @@ class State:
             )
 
     @classmethod
-    def from_disk(cls, prefix: str, comm: Comm) -> "State":
+    def from_disk(cls, prefix: str, *, comm: Optional[Comm] = None) -> "State":
         """Deserialize the data from disk.
+
+        Notes:
+            The resulting state will not be valid to use
+            in a model if 'comm' is None.
 
         Parameters:
             prefix: Path and file prefix
-            comm: MPI communicator (is not serialized)
+            comm: MPI communicator prefixed if passed
 
         Returns:
             State that was serialized.
 
         """
-        myrank = comm.Get_rank()
-        storages = {k: np.load(f"{prefix}_{k}_{myrank}.npy") for k in ("h", "u", "v")}
-        with open(f"{prefix}_state_{myrank}.json", mode="r") as f:
+        if comm is not None:
+            prefix = f"{prefix}_{comm.Get_rank()}"
+
+        with open(f"{prefix}_grid.json", mode="r") as f:
+            input_data = json.loads(f.read())
+
+        input_data["comm"] = comm or NullComm(0, num_ranks=1)
+
+        grid = Grid.from_kwargs(**input_data)
+
+        storages = {k: np.load(f"{prefix}_state_{k}.npy") for k in ("h", "u", "v")}
+        with open(f"{prefix}_state_metadata.json", mode="r") as f:
             state_data = json.loads(f.read())
 
         assert "dtype" in state_data
         state_data["dtype"] = np.dtype(state_data["dtype"])
-
-        with open(f"{prefix}_grid_{myrank}.json", mode="r") as f:
-            input_data = json.loads(f.read())
-
-        grid = Grid.from_kwargs(comm=comm, **input_data)
 
         return cls(grid=grid, **state_data, **storages)
 
@@ -366,12 +385,18 @@ class State:
             Global state on the root proc (0), and None on others.
 
         """
-        data = state.grid.comm.gather(
-            {"h": state.h, "u": state.u, "v": state.v, "position": state.grid.position},
-            root=0,
+        root = 0
+        ldata = state.grid.comm.gather(
+            {
+                "h": state.h.data,
+                "u": state.u.data,
+                "v": state.v.data,
+                "position": state.grid.position,
+            },
+            root=root,
         )
 
-        if state.grid.comm.Get_rank() == 0:
+        if state.grid.comm.Get_rank() == root:
             global_grid = Grid.make_global(state.grid)
             global_state = State.new(
                 global_grid,
@@ -379,18 +404,26 @@ class State:
                 nhalo=state.nhalo,
                 gt4py_backend=state.gt4py_backend,
                 value=0,
+                _is_global=True,
             )
+            for data in ldata:
 
-            nh = global_state.nhalo
+                nh = global_state.nhalo
 
-            istart = nh + data["position"][0] * state.grid.ni
-            iend = nh + (data["position"][0] + 1) * state.grid.ni
-            jstart = nh + data["position"][1] * state.grid.nj
-            jend = nh + (data["position"][1] + 1) * state.grid.nj
+                istart = nh + data["position"][0] * state.grid.ni
+                iend = nh + (data["position"][0] + 1) * state.grid.ni
+                jstart = nh + data["position"][1] * state.grid.nj
+                jend = nh + (data["position"][1] + 1) * state.grid.nj
 
-            global_state.h[istart:iend, jstart:jend, :] = data["h"][nh:-nh, nh:-nh, :]
-            global_state.u[istart:iend, jstart:jend, :] = data["u"][nh:-nh, nh:-nh, :]
-            global_state.v[istart:iend, jstart:jend, :] = data["v"][nh:-nh, nh:-nh, :]
+                global_state.h.data[istart:iend, jstart:jend, :] = data["h"][
+                    nh:-nh, nh:-nh, :
+                ]
+                global_state.u.data[istart:iend, jstart:jend, :] = data["u"][
+                    nh:-nh, nh:-nh, :
+                ]
+                global_state.v.data[istart:iend, jstart:jend, :] = data["v"][
+                    nh:-nh, nh:-nh, :
+                ]
 
             return global_state
 

@@ -39,10 +39,18 @@ class Grid:
             config_grid: configuration
             comm: MPI communicator
 
+        Raises:
+            RuntimeError: if there are more ranks than expected in the proc_layout
+
         Returns:
             solver grid
 
         """
+        num_ranks_expected = config_grid.proc_layout[0] * config_grid.proc_layout[1]
+
+        if comm.Get_rank() + 1 > num_ranks_expected:
+            raise RuntimeError("Unexpected rank")
+
         my_rank = comm.Get_rank()
 
         row = my_rank // config_grid.proc_layout[0]
@@ -83,7 +91,7 @@ class Grid:
             xlimit=xlimit,
             ylimit=ylimit,
             procs=procs,
-            position=(row, col),
+            position=(col, row),
             proc_layout=config_grid.proc_layout,
             comm=comm,
         )
@@ -214,7 +222,7 @@ class Grid:
             procs=((None, None), (None, None)),
             position=(0, 0),
             proc_layout=(1, 1),
-            comm=NullComm(0),
+            comm=NullComm(0, num_ranks=1),
         )
 
 
@@ -251,4 +259,4 @@ def get_position_arrays(
     X += 0.5 * dx
     Y += 0.5 * dy
 
-    return X, Y
+    return X.T, Y.T
