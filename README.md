@@ -57,7 +57,14 @@ $ docker run ghcr.io/ai2cm/shallow_water_demo:main examples/tidal_wave.yaml
 
 The entrypoint of this docker container is `scripts/run_shallow_water.sh` and the default directory is the top-level `shallo_water_model` source.
 
-A volume mount is of course required to actually save data back to the local disk.
+A volume mount is required to actually save data back to the local disk.
+
+An alternative to pulling the docker image from `ghcr.io` is to build it locally:
+
+```shell
+$ docker build . -t shallow_water_demo
+$ docker run shallow_water_demo examples/tidal_wave.yaml
+```
 
 ## 💻 Development
 
