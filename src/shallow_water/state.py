@@ -387,12 +387,16 @@ class State:
         """
         root = 0
         ldata = state.grid.comm.gather(
-            {"h": state.h, "u": state.u, "v": state.v, "position": state.grid.position},
+            {
+                "h": state.h.data,
+                "u": state.u.data,
+                "v": state.v.data,
+                "position": state.grid.position,
+            },
             root=root,
         )
 
         if state.grid.comm.Get_rank() == root:
-            data = ldata[0]
             global_grid = Grid.make_global(state.grid)
             global_state = State.new(
                 global_grid,
@@ -402,23 +406,24 @@ class State:
                 value=0,
                 _is_global=True,
             )
+            for data in ldata:
 
-            nh = global_state.nhalo
+                nh = global_state.nhalo
 
-            istart = nh + data["position"][0] * state.grid.ni
-            iend = nh + (data["position"][0] + 1) * state.grid.ni
-            jstart = nh + data["position"][1] * state.grid.nj
-            jend = nh + (data["position"][1] + 1) * state.grid.nj
+                istart = nh + data["position"][0] * state.grid.ni
+                iend = nh + (data["position"][0] + 1) * state.grid.ni
+                jstart = nh + data["position"][1] * state.grid.nj
+                jend = nh + (data["position"][1] + 1) * state.grid.nj
 
-            global_state.h.data[istart:iend, jstart:jend, :] = data["h"].data[
-                nh:-nh, nh:-nh, :
-            ]
-            global_state.u.data[istart:iend, jstart:jend, :] = data["u"].data[
-                nh:-nh, nh:-nh, :
-            ]
-            global_state.v.data[istart:iend, jstart:jend, :] = data["v"].data[
-                nh:-nh, nh:-nh, :
-            ]
+                global_state.h.data[istart:iend, jstart:jend, :] = data["h"][
+                    nh:-nh, nh:-nh, :
+                ]
+                global_state.u.data[istart:iend, jstart:jend, :] = data["u"][
+                    nh:-nh, nh:-nh, :
+                ]
+                global_state.v.data[istart:iend, jstart:jend, :] = data["v"][
+                    nh:-nh, nh:-nh, :
+                ]
 
             return global_state
 

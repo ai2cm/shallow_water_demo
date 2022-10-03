@@ -91,7 +91,7 @@ class Grid:
             xlimit=xlimit,
             ylimit=ylimit,
             procs=procs,
-            position=(row, col),
+            position=(col, row),
             proc_layout=config_grid.proc_layout,
             comm=comm,
         )
