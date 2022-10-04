@@ -38,7 +38,7 @@ def _make_storage(
         gt4py storage
 
     """
-    default_origin = (nhalo, nhalo, 0)
+    aligned_index = (nhalo, nhalo, 0)
     shape = (grid.ni + 2 * nhalo, grid.nj + 2 * nhalo, grid.nk)
 
     if value is None:
@@ -52,10 +52,10 @@ def _make_storage(
 
     return func(
         backend=gt4py_backend,
-        default_origin=default_origin,
+        aligned_index=aligned_index,
         shape=shape,
         dtype=dtype,
-        mask=gt4py.gtscript.mask_from_axes(gt4py.gtscript.IJK),
+        dimensions=gt4py.gtscript.IJK,
     )
 
 
@@ -160,29 +160,29 @@ class _StateHaloExchanger:
         """
         grid = state.grid
         nh = state.nhalo
-        if grid.procs[0][1] is not None:
-            assert self.right_recv is not None
-            state.h[-nh:, nh:-nh, :] = np.flip(self.right_recv[:, :, :, 0], axis=0)
-            state.u[-nh:, nh:-nh, :] = np.flip(self.right_recv[:, :, :, 1], axis=0)
-            state.v[-nh:, nh:-nh, :] = np.flip(self.right_recv[:, :, :, 2], axis=0)
-
         if grid.procs[0][0] is not None:
             assert self.left_recv is not None
-            state.h[:nh, nh:-nh, :] = np.flip(self.left_recv[:, :, :, 0], axis=0)
-            state.u[:nh, nh:-nh, :] = np.flip(self.left_recv[:, :, :, 1], axis=0)
-            state.v[:nh, nh:-nh, :] = np.flip(self.left_recv[:, :, :, 2], axis=0)
+            state.h[:nh, nh:-nh, :] = self.left_recv[:, :, :, 0]
+            state.u[:nh, nh:-nh, :] = self.left_recv[:, :, :, 1]
+            state.v[:nh, nh:-nh, :] = self.left_recv[:, :, :, 2]
 
-        if grid.procs[1][1] is not None:
-            assert self.up_recv is not None
-            state.h[nh:-nh, -nh:, :] = np.flip(self.up_recv[:, :, :, 0], axis=1)
-            state.u[nh:-nh, -nh:, :] = np.flip(self.up_recv[:, :, :, 1], axis=1)
-            state.v[nh:-nh, -nh:, :] = np.flip(self.up_recv[:, :, :, 2], axis=1)
+        if grid.procs[0][1] is not None:
+            assert self.right_recv is not None
+            state.h[-nh:, nh:-nh, :] = self.right_recv[:, :, :, 0]
+            state.u[-nh:, nh:-nh, :] = self.right_recv[:, :, :, 1]
+            state.v[-nh:, nh:-nh, :] = self.right_recv[:, :, :, 2]
 
         if grid.procs[1][0] is not None:
             assert self.down_recv is not None
-            state.h[nh:-nh, :nh, :] = np.flip(self.down_recv[:, :, :, 0], axis=1)
-            state.u[nh:-nh, :nh, :] = np.flip(self.down_recv[:, :, :, 1], axis=1)
-            state.v[nh:-nh, :nh, :] = np.flip(self.down_recv[:, :, :, 2], axis=1)
+            state.h[nh:-nh, :nh, :] = self.down_recv[:, :, :, 0]
+            state.u[nh:-nh, :nh, :] = self.down_recv[:, :, :, 1]
+            state.v[nh:-nh, :nh, :] = self.down_recv[:, :, :, 2]
+
+        if grid.procs[1][1] is not None:
+            assert self.up_recv is not None
+            state.h[nh:-nh, -nh:, :] = self.up_recv[:, :, :, 0]
+            state.u[nh:-nh, -nh:, :] = self.up_recv[:, :, :, 1]
+            state.v[nh:-nh, -nh:, :] = self.up_recv[:, :, :, 2]
 
     def exchange(self, state: "State") -> None:
         """Exchange the halos from state.
@@ -254,9 +254,9 @@ class _StateHaloExchanger:
 class State:
     """State storages."""
 
-    h: gt4py.storage.Storage
-    u: gt4py.storage.Storage
-    v: gt4py.storage.Storage
+    h: np.ndarray
+    u: np.ndarray
+    v: np.ndarray
     nhalo: int
     gt4py_backend: str
     dtype: np.dtype
@@ -388,9 +388,9 @@ class State:
         root = 0
         ldata = state.grid.comm.gather(
             {
-                "h": state.h.data,
-                "u": state.u.data,
-                "v": state.v.data,
+                "h": state.h,
+                "u": state.u,
+                "v": state.v,
                 "position": state.grid.position,
             },
             root=root,
@@ -415,13 +415,13 @@ class State:
                 jstart = nh + data["position"][1] * state.grid.nj
                 jend = nh + (data["position"][1] + 1) * state.grid.nj
 
-                global_state.h.data[istart:iend, jstart:jend, :] = data["h"][
+                global_state.h[istart:iend, jstart:jend, :] = data["h"][
                     nh:-nh, nh:-nh, :
                 ]
-                global_state.u.data[istart:iend, jstart:jend, :] = data["u"][
+                global_state.u[istart:iend, jstart:jend, :] = data["u"][
                     nh:-nh, nh:-nh, :
                 ]
-                global_state.v.data[istart:iend, jstart:jend, :] = data["v"][
+                global_state.v[istart:iend, jstart:jend, :] = data["v"][
                     nh:-nh, nh:-nh, :
                 ]
 

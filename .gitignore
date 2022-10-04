@@ -5,3 +5,4 @@ cov_html/
 .coverage
 .gt_cache
 .dace*
+output/
