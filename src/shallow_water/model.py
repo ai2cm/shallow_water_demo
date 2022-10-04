@@ -8,7 +8,7 @@ import numpy as np
 from gt4py.gtscript import IJ, IJK, PARALLEL, Field, computation, interval
 
 from . import config
-from .grid import Grid, get_position_arrays
+from .grid import Grid
 from .state import State
 
 
@@ -54,15 +54,10 @@ def _set_ic_tidalwave(state: State, **kwargs: Any) -> None:
             grid.ylimit[1] - grid.ylimit[0]
         ) / kwargs.get("yfactor", 4)
 
-    x, y = get_position_arrays(
-        nhalo=state.nhalo,
-        shape=state.h.shape,
-        xlimit=grid.xlimit,
-        ylimit=grid.ylimit,
-    )
+    x, y = grid.position_arrays(state.nhalo)
 
-    xm = grid.xlimit[0] + (grid.xlimit[1] - grid.xlimit[0]) / 2
-    ym = grid.ylimit[0] + (grid.ylimit[1] - grid.ylimit[0]) / 2
+    xm = grid.xlimit_global[0] + (grid.xlimit_global[1] - grid.xlimit_global[0]) / 2
+    ym = grid.ylimit_global[0] + (grid.ylimit_global[1] - grid.ylimit_global[0]) / 2
 
     sigma: float
     if v := kwargs.get("sigma") is not None:
@@ -205,12 +200,12 @@ class ShallowWaterModel:
                     u[1, 0, 0] * u[1, 0, 0] / 2.0 - u[-1, 0, 0] * u[-1, 0, 0] / 2.0
                 )
                 vu_diff = v[0, 0, 0] * (u[0, 1, 0] - u[0, -1, 0])
-                h_diff = h[1, 0, 0] - h[-1, 0, 0]
+                uh_diff = h[1, 0, 0] - h[-1, 0, 0]
                 u_new = (  # noqa: F841
                     u_avg
                     - 0.5 * dt * dx * u2_diff
                     - 0.5 * dt * dy * vu_diff
-                    - 0.5 * g * dt * dx * h_diff
+                    - 0.5 * g * dt * dx * uh_diff
                 )
 
                 v_avg = (v[1, 0, 0] + v[-1, 0, 0] + v[0, 1, 0] + v[0, -1, 0]) / 4.0
@@ -218,12 +213,12 @@ class ShallowWaterModel:
                     v[0, 1, 0] * v[0, 1, 0] / 2.0 - v[0, -1, 0] * v[0, -1, 0] / 2.0
                 )
                 uv_diff = u[0, 0, 0] * (v[1, 0, 0] - u[-1, 0, 0])
-                h_diff = h[0, 1, 0] - h[0, -1, 0]
+                vh_diff = h[0, 1, 0] - h[0, -1, 0]
                 v_new = (  # noqa: F841
                     v_avg
                     - 0.5 * dt * dy * v2_diff
                     - 0.5 * dt * dx * uv_diff
-                    - 0.5 * g * dt * dy * h_diff
+                    - 0.5 * g * dt * dy * vh_diff
                 )
 
                 h_avg = (h[1, 0, 0] + h[-1, 0, 0] + h[0, 1, 0] + h[0, -1, 0]) / 4.0
@@ -251,24 +246,24 @@ class ShallowWaterModel:
         """Set Dirichlet reflection boundary conditions."""
         nh = self.state.nhalo
         if self.state.grid.procs[0][0] is None:
-            self.state.h[nh - 1, :, :] = self.state.h[nh, :, :]
-            self.state.u[nh - 1, :, :] = -self.state.u[nh, :, :]
-            self.state.v[nh - 1, :, :] = self.state.v[nh, :, :]
+            self.state.h[0, nh:-nh, :] = self.state.h[1, nh:-nh, :]
+            self.state.u[0, nh:-nh, :] = -self.state.u[1, nh:-nh, :]
+            self.state.v[0, nh:-nh, :] = self.state.v[1, nh:-nh, :]
 
         if self.state.grid.procs[0][1] is None:
-            self.state.h[1 - nh, :, :] = self.state.h[-nh, :, :]
-            self.state.u[1 - nh, :, :] = -self.state.u[-nh, :, :]
-            self.state.v[1 - nh, :, :] = self.state.v[-nh, :, :]
+            self.state.h[-1, nh:-nh, :] = self.state.h[-2, nh:-nh, :]
+            self.state.u[-1, nh:-nh, :] = -self.state.u[-2, nh:-nh, :]
+            self.state.v[-1, nh:-nh, :] = self.state.v[-2, nh:-nh, :]
 
         if self.state.grid.procs[1][0] is None:
-            self.state.h[:, nh - 1, :] = self.state.h[:, nh, :]
-            self.state.u[:, nh - 1, :] = self.state.u[:, nh, :]
-            self.state.v[:, nh - 1, :] = -self.state.v[:, nh, :]
+            self.state.h[nh:-nh, 0, :] = self.state.h[nh:-nh, 1, :]
+            self.state.u[nh:-nh, 0, :] = self.state.u[nh:-nh, 1, :]
+            self.state.v[nh:-nh, 0, :] = -self.state.v[nh:-nh, 1, :]
 
         if self.state.grid.procs[1][1] is None:
-            self.state.h[:, 1 - nh, :] = self.state.h[:, -nh, :]
-            self.state.u[:, 1 - nh, :] = self.state.u[:, -nh, :]
-            self.state.v[:, 1 - nh, :] = -self.state.v[:, -nh, :]
+            self.state.h[nh:-nh, -1, :] = self.state.h[nh:-nh, -2, :]
+            self.state.u[nh:-nh, -1, :] = self.state.u[nh:-nh, -2, :]
+            self.state.v[nh:-nh, -1, :] = -self.state.v[nh:-nh, -2, :]
 
     def take_step(self):
         """Take a timestep."""

@@ -28,4 +28,4 @@ def state(grid):
 
 @pytest.mark.parametrize("component", (None, "h", "u", "v"))
 def test_plot_state(state, component):
-    assert shallow_water.plot.plot_state(state, component) is not None
+    assert shallow_water.plot.plot_state(state, 1, component) is not None

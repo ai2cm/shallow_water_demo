@@ -24,12 +24,12 @@ def test_set_ic(grid: shallow_water.Grid, ic_type: str):
     shallow_water.model.set_initial_condition(state, ic_type)
 
     nh = state.nhalo
-    assert state.h.data[nh:-nh, nh:-nh, :].sum() > 0
+    assert state.h[nh:-nh, nh:-nh, :].sum() > 0
 
     global_state = shallow_water.State.gather_from(state)
     if state.grid.comm.Get_rank() == 0:
         assert global_state is not None
-        assert global_state.h.data[nh:-nh, nh:-nh, :].sum() > 0
+        assert global_state.h[nh:-nh, nh:-nh, :].sum() > 0
 
 
 def test_shallow_water_model_step(grid: shallow_water.Grid):

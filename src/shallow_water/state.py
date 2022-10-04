@@ -160,29 +160,29 @@ class _StateHaloExchanger:
         """
         grid = state.grid
         nh = state.nhalo
-        if grid.procs[0][1] is not None:
-            assert self.right_recv is not None
-            state.h[-nh:, nh:-nh, :] = np.flip(self.right_recv[:, :, :, 0], axis=0)
-            state.u[-nh:, nh:-nh, :] = np.flip(self.right_recv[:, :, :, 1], axis=0)
-            state.v[-nh:, nh:-nh, :] = np.flip(self.right_recv[:, :, :, 2], axis=0)
-
         if grid.procs[0][0] is not None:
             assert self.left_recv is not None
-            state.h[:nh, nh:-nh, :] = np.flip(self.left_recv[:, :, :, 0], axis=0)
-            state.u[:nh, nh:-nh, :] = np.flip(self.left_recv[:, :, :, 1], axis=0)
-            state.v[:nh, nh:-nh, :] = np.flip(self.left_recv[:, :, :, 2], axis=0)
+            state.h[:nh, nh:-nh, :] = self.left_recv[:, :, :, 0]
+            state.u[:nh, nh:-nh, :] = self.left_recv[:, :, :, 1]
+            state.v[:nh, nh:-nh, :] = self.left_recv[:, :, :, 2]
 
-        if grid.procs[1][1] is not None:
-            assert self.up_recv is not None
-            state.h[nh:-nh, -nh:, :] = np.flip(self.up_recv[:, :, :, 0], axis=1)
-            state.u[nh:-nh, -nh:, :] = np.flip(self.up_recv[:, :, :, 1], axis=1)
-            state.v[nh:-nh, -nh:, :] = np.flip(self.up_recv[:, :, :, 2], axis=1)
+        if grid.procs[0][1] is not None:
+            assert self.right_recv is not None
+            state.h[-nh:, nh:-nh, :] = self.right_recv[:, :, :, 0]
+            state.u[-nh:, nh:-nh, :] = self.right_recv[:, :, :, 1]
+            state.v[-nh:, nh:-nh, :] = self.right_recv[:, :, :, 2]
 
         if grid.procs[1][0] is not None:
             assert self.down_recv is not None
-            state.h[nh:-nh, :nh, :] = np.flip(self.down_recv[:, :, :, 0], axis=1)
-            state.u[nh:-nh, :nh, :] = np.flip(self.down_recv[:, :, :, 1], axis=1)
-            state.v[nh:-nh, :nh, :] = np.flip(self.down_recv[:, :, :, 2], axis=1)
+            state.h[nh:-nh, :nh, :] = self.down_recv[:, :, :, 0]
+            state.u[nh:-nh, :nh, :] = self.down_recv[:, :, :, 1]
+            state.v[nh:-nh, :nh, :] = self.down_recv[:, :, :, 2]
+
+        if grid.procs[1][1] is not None:
+            assert self.up_recv is not None
+            state.h[nh:-nh, -nh:, :] = self.up_recv[:, :, :, 0]
+            state.u[nh:-nh, -nh:, :] = self.up_recv[:, :, :, 1]
+            state.v[nh:-nh, -nh:, :] = self.up_recv[:, :, :, 2]
 
     def exchange(self, state: "State") -> None:
         """Exchange the halos from state.

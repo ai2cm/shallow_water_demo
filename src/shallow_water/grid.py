@@ -24,6 +24,8 @@ class Grid:
     nk: int
     xlimit: Tuple[float, float]
     ylimit: Tuple[float, float]
+    xlimit_global: Tuple[float, float]
+    ylimit_global: Tuple[float, float]
     procs: Tuple[
         Tuple[Optional[int], Optional[int]], Tuple[Optional[int], Optional[int]]
     ]
@@ -75,6 +77,7 @@ class Grid:
         dpy = (config_grid.ylimit[1] - config_grid.ylimit[0]) / config_grid.proc_layout[
             1
         ]
+
         xlimit = (
             config_grid.xlimit[0] + dpx * col,
             config_grid.xlimit[0] + dpx * (col + 1),
@@ -90,6 +93,8 @@ class Grid:
             nk=config_grid.nk,
             xlimit=xlimit,
             ylimit=ylimit,
+            xlimit_global=config_grid.xlimit,
+            ylimit_global=config_grid.ylimit,
             procs=procs,
             position=(col, row),
             proc_layout=config_grid.proc_layout,
@@ -143,6 +148,8 @@ class Grid:
 
         kwargs["xlimit"] = tuple(kwargs["xlimit"])
         kwargs["ylimit"] = tuple(kwargs["ylimit"])
+        kwargs["xlimit_global"] = tuple(kwargs["xlimit_global"])
+        kwargs["ylimit_global"] = tuple(kwargs["ylimit_global"])
         kwargs["position"] = tuple(kwargs["position"])
         kwargs["proc_layout"] = tuple(kwargs["proc_layout"])
 
@@ -200,63 +207,53 @@ class Grid:
             Globalized grid
 
         """
-        my_rank = grid.comm.Get_rank()
-
-        row = my_rank // grid.proc_layout[0]
-        col = my_rank % grid.proc_layout[0]
-
-        xlimit = (
-            grid.xlimit[0] - col * grid.dx,
-            grid.xlimit[1] + (grid.proc_layout[0] - 1 - col) * grid.dx,
-        )
-        ylimit = (
-            grid.ylimit[0] - row * grid.dy,
-            grid.ylimit[1] + (grid.proc_layout[1] - 1 - row) * grid.dy,
-        )
         return cls(
             ni=grid.ni * grid.proc_layout[0],
             nj=grid.nj * grid.proc_layout[1],
             nk=grid.nk,
-            xlimit=xlimit,
-            ylimit=ylimit,
+            xlimit=grid.xlimit_global,
+            ylimit=grid.ylimit_global,
+            xlimit_global=grid.xlimit_global,
+            ylimit_global=grid.ylimit_global,
             procs=((None, None), (None, None)),
             position=(0, 0),
             proc_layout=(1, 1),
             comm=NullComm(0, num_ranks=1),
         )
 
+    def position_arrays(self, nhalo: int) -> Tuple[np.ndarray, np.ndarray]:
+        """Return the meshgrid of x and y cell center positions.
 
-def get_position_arrays(
-    *,
-    nhalo: int,
-    shape: Tuple[int, int],
-    xlimit: Tuple[float, float],
-    ylimit: Tuple[float, float],
-) -> Tuple[np.ndarray, np.ndarray]:
-    """Return the meshgrid of x and y cell center positions.
+        Parameters:
+            nhalo: number of state array halos
 
-    Parameters:
-        nhalo: number of state array halos
-        shape: the i and j array extents
-        xlimit: grid geometry for the x direction
-        ylimit: grid geometry for the y direction
+        Returns:
+            X, Y meshgrid ndarrays
 
-    Returns:
-        X, Y meshgrid ndarrays
+        """
+        dx = (self.xlimit_global[1] - self.xlimit_global[0]) / (
+            self.proc_layout[0] * self.ni
+        )
+        dy = (self.ylimit_global[1] - self.ylimit_global[0]) / (
+            self.proc_layout[1] * self.nj
+        )
 
-    """
-    dx = (xlimit[1] - xlimit[0]) / (shape[0] - 2 * nhalo)
-    dy = (ylimit[1] - ylimit[0]) / (shape[1] - 2 * nhalo)
-    extended_xlimit = (xlimit[0] - nhalo * dx, xlimit[1] + nhalo * dx)
-    extended_ylimit = (ylimit[0] - nhalo * dy, ylimit[1] + nhalo * dy)
+        extended_xlimit = (
+            self.xlimit[0] - nhalo * dx,
+            self.xlimit[1] + nhalo * dx,
+        )
+        extended_ylimit = (
+            self.ylimit[0] - nhalo * dy,
+            self.ylimit[1] + nhalo * dy,
+        )
 
-    xl = np.linspace(*extended_xlimit, shape[0])
-    yl = np.linspace(*extended_ylimit, shape[1])
+        xl = np.linspace(*extended_xlimit, self.ni + 2 * nhalo)
+        yl = np.linspace(*extended_ylimit, self.nj + 2 * nhalo)
 
-    X, Y = tuple(np.meshgrid(xl, yl))
+        X, Y = tuple(np.meshgrid(xl, yl))
 
-    # Shift positions from cell edges to centers
-    X += 0.5 * dx
-    Y += 0.5 * dy
+        # Shift positions from cell edges to centers
+        X += 0.5 * dx
+        Y += 0.5 * dy
 
-    return X.T, Y.T
+        return X.T, Y.T
