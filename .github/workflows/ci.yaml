@@ -27,7 +27,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('setup.cfg') }}-${{ hashFiles('requirements-dev.txt') }}-gt4py-b39a0f0b85038592e3fccabde56137bb9c60e231
+        key: v2-${{ env.pythonLocation }}-${{ hashFiles('setup.cfg') }}-${{ hashFiles('requirements-dev.txt') }}-gt4py-b39a0f0b85038592e3fccabde56137bb9c60e231
     - name: Install dependencies
       if: steps.pip-cache.outputs.cache-hit != 'true'
       run: |
