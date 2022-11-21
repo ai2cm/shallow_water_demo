@@ -13,7 +13,7 @@ LABEL purpose="Image to run the shallow water demo"
 COPY . /usr/local/src/shallow_water
 RUN pip install /usr/local/src/shallow_water[all]
 RUN pip cache purge
-env OMPI_ALLOW_RUN_AS_ROOT=1
-env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+ENV OMPI_ALLOW_RUN_AS_ROOT=1
+ENV OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
 WORKDIR /usr/local/src/shallow_water
 ENTRYPOINT ["scripts/run_shallow_water.sh"]

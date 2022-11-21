@@ -6,3 +6,4 @@ cov_html/
 .gt_cache
 .dace*
 output/
+.devcontainer/

@@ -2,6 +2,8 @@
 
 import argparse
 
+from mpi4py import MPI
+
 import shallow_water.driver
 
 
@@ -36,6 +38,7 @@ def main() -> None:
         args.config_file,
         args.directory,
         args.output_frequency,
+        MPI.COMM_WORLD,
         globalize=args.globalize,
     )
 
