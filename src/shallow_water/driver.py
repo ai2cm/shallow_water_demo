@@ -4,7 +4,6 @@ import logging
 import os
 
 import yaml
-from mpi4py import MPI
 
 from .communicator import Comm
 from .config import Config
@@ -65,6 +64,7 @@ def run(
     config_file: str,
     output_directory: str,
     output_frequency: int,
+    comm: Comm,
     *,
     globalize: bool = False,
 ) -> ShallowWaterModel:
@@ -74,6 +74,7 @@ def run(
         config_file: path to the yaml input config
         output_directory: directory in which to save output
         output_frequency: frequency with which to output the model state
+        comm: MPI communicator
         globalize: if True, gathers the state after integrating (at the 'final' state)
 
     Raises:
@@ -96,7 +97,7 @@ def run(
 
     return integrate(
         config,
-        MPI.COMM_WORLD,
+        comm,
         output_directory=output_directory,
         output_frequency=output_frequency,
         globalize=globalize,
